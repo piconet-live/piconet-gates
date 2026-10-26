@@ -24,7 +24,7 @@ moved.
 
 | Step | What it runs | Leaves |
 |---|---|---|
-| `build` | the runner's `port/build/build.sh NAME` (`PROFILE` and `PORT_PYTHON`, a Windows `python.exe` with keystone, as it takes them): the targets of the runner's CMake superbuild (preset `windows`) in order, the game folder and a staged launcher | `W/port/bundle-NAME`, `game-NAME`, `runner-NAME`, `W/work/mod-cg-NAME` |
+| `build` | the runner's `port/build/build.sh NAME` (`PROFILE` and `PORT_PYTHON`, a Windows `python.exe` with keystone, as it takes them): the targets of the runner's CMake superbuild (preset `windows`) in order, the game folder and a staged launcher, made with no stack (the build gets no `STACK`, `STACK_ADDRESS` or `KIND`: the stack goes in at `package`) | `W/port/bundle-NAME`, `game-NAME`, `runner-NAME`, `W/work/mod-cg-NAME` |
 | `package` | the runner's `port/build/package.sh` with `STACK`, `STACK_ADDRESS` (`stacks.py address STACK` in the service) and `KIND=public` | the player copy, checked, in `W/release/NAME/copy/dist` |
 | `installer` | the copy laid out as the installed folder: the launcher's folder (`app/`) at the top, `recomp/` and `source/` beside it, the copy's marker (`portable-copy.txt`) replaced by `installed-copy.txt` (both named in the launcher's `Install.cs`) | `W/release/NAME/installer` |
 | `previous` | `vpk "[win]" download github`: the newest release's full package, for the delta | `W/release/NAME/releases` |
