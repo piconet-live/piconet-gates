@@ -124,7 +124,10 @@ copy_folder() {   # the player copy's folder package.sh made: the one folder in 
 said() { sed -n "s/.*const string $1 = \"\([^\"]*\)\".*/\1/p" "$launcher/net/src/Launcher.Core/Files/Install.cs"; }
 version() { python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$PACK/source/package-manifest.json"; }
 
-step_build() { port/build/build.sh "$NAME"; }
+# the build stages its development copy (launcher-NAME) with no stack: the stack is applied once, at the step package.
+# STACK is in this script's environment (STACK=A release.sh) and stage-launcher.sh takes STACK, STACK_ADDRESS and
+# KIND all three or none, so the build gets none of them
+step_build() { env -u STACK -u STACK_ADDRESS -u KIND port/build/build.sh "$NAME"; }
 step_package() {
   STACK=$STACK STACK_ADDRESS=$STACK_ADDRESS KIND=$KIND RUNNER=$W/port/runner-$NAME/moderngekko-run.exe RUNNER_COMMIT=${runner_commit:0:12} \
     MODULE=cg-$NAME BUNDLE=$W/port/bundle-$NAME SYS=$W/ModernGekko/build/Sys SYS_SOURCE=$W/ModernGekko/vendor/dolphin \
