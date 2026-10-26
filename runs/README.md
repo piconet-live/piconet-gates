@@ -1,0 +1,27 @@
+# port/gates/runs: the scripts that start a game
+
+A game is started through a staged launcher (`LAUNCHER=NAME`, default `launcher-dev`) in a data folder of its own,
+muted, with `SDL_JOYSTICK_HIDAPI_GAMECUBE=0`; the script takes the PC itself and leaves the logs in
+`<work>/port/runs/RUN`. Each header lists its settings; the port handbook, "How to", has
+the usual calls.
+
+| File | What |
+|---|---|
+| `scrubber-check.sh` | The replay scrubber as players get it: recordings played back with a stress script of scrubs, jumps, pauses and frame steps to the replay's end, every step against the recording, and the replay's memory against its budget. Its last line: PASS or FAIL |
+| `launcher-run.sh` | One game through the launcher: offline play, the game's controller options (`SETUP=1`), a match file (`MATCH=`), a replay (`REPLAY=`). Its last line says how the game ended |
+| `match-file.sh`, `match-run.sh` | A match file from a test server in WSL; a race of one player and 29 computer racers from it (row `match`; `ref`: on the JIT) |
+| `options-run.sh`, `options-save.py` | Two games race each other, one from a save with a player's own controller options (made here from the pristine save); `options-report.py` says whether they showed |
+| `controller-setup-run.sh` | The start that opens the game's own controller options (`SETUP=1` of `launcher-run.sh`): a pad script changes one option and leaves, or leaves at once; the game must close by itself, and the save file hold the change, pass the game's reader and differ nowhere else than a save writes (the script's head), or be the same byte for byte |
+| `linux-playback.sh` | A recording played back by the Linux runner and module (`port/build/linux.sh`) in WSL, headless, muted, uncapped: every step's checksum compared with the recorded one, and a trace of every checksum kept to compare with a Windows playback's (the port-linux handbook) |
+| `pair-run.sh` | Two games race each other, 28 simulated players; both recordings played back at the end (rows `pair`, `desync`). `STATS1`, `STATS2`: a stat pack for each game's race |
+| `stat-pack-run.sh`, `stat-pack.py`, `stat-pack-refused.sh` | The proving run of stat packs (not a gate; about 45 minutes; `ONLY=PART` for one part): races without a pack against the JIT reference and, with two games and rollbacks, against the build from before stat packs (both ways); two games on one made-up pack among computer racers with forced rollbacks and both playbacks; two games handed different packs; a whole-file pack from a test server started with `--stat-pack` through two launchers' Quick Play at CPU level 1; two games on the repository's pack (GX Unleashed), read from its file a third way; a machine's denormal, a machine's grip below its floor and a part's value past its size refused by the launcher and, handed straight to the game, by the game. `../reports/stat-pack-report.py` gives the verdict |
+| `mixed-run.sh`, `full-screen.ps1` | Games of different builds in one race, one for each staged launcher folder named (row `mixed`): the pair run's way of making the race, each game's own lag, rollbacks forced in every game, one seat driven into the wall, the others to the finish; it watches for the owner's game while it runs. `../gate-judge.py mixed RUN` gives the verdict. Also games of different settings: each game's own input delay (`DELAYS="0 2"`) and launcher settings (`SETTINGS`), a seat of presses at known fields (`PULSES`), no forced rollbacks (`ROLLBACKS=none`): `../reports/latency-report.py` reads those runs |
+| `board-run.sh` | The launcher's status board end to end (`protocol/formats.md`, section 8): a headless match race whose game stands still 12 s on purpose; the launcher's lines must show the board taken, the phases, snapshots, the freeze judged and its end; `../reports/board-report.py` gives the verdict. Not a row of the table |
+| `freeze-run.sh` | The freeze report end to end (`protocol/formats.md`, section 7): a match race whose game stands still twice on purpose (`debug.standStill`), the second time closed from outside while it stands; `../reports/freeze-report.py --expect-test` gives the verdict. Not a row of the table |
+| `race-lib.sh`, `server-up.sh` | A test race made and ended one way (sourced by `pair-run.sh`, `mixed-run.sh`, `quickplay-run.sh`): the test server and the simulated players started and stopped by their IDs, a launcher's game found and ended by its ID; `server-up.sh` waits until the test server answers (30 s at most) |
+| `quickplay-run.sh` | Quick Play end to end through the launcher's test door: lobby, votes, races (rows `quickplay`, `thirty`) |
+| `map-run.sh`, `map-offsets.py` | A measuring run of the whole-frame map: `match-run.sh`'s race with the rollback log, forced rollbacks and the external sampler on the game's process; the sampler's five offsets of one runner build (the speed handbook, section 4) |
+| `profile.sh`, `state.sh` | Recipes of our release process and the gates' inputs, moved from port/setup (10-25): the module's training profile (an instrumented module, two test games; `scripts/release-build.sh` step profile) and a saved state from a boot of the native form (not one the gate scenes can use: `port/setup/inputs.md`) |
+| `launch-file.py` | A run's launch file (the runner's `--config`) from a named one of `port/configs` |
+| `emu-log.sh` | Sourced: the emulator's own log of a test game, kept beside the run |
+| `clock-rate.py` | The WSL clock against Windows' (`CLOCKRATE`) |

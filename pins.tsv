@@ -1,0 +1,3 @@
+name	value	note
+# where the gates find what they test: the runner's checkout, relative to this folder. The gates (piconet-gates, private) are checked out at the runner's port/setup/pins.tsv REPO_GATES (port/gates), so it is ../..; runner.sh refuses a pair that does not name each other, as every gate script reaches the runner's files by ../.. from here		
+REPO_RUNNER	../..	the runner (piconet-runner): its port/setup/lib.sh (the work folder, the disc, the PC's locks), its build and tests, recomp/manifest.toml, the parts its app.sh names

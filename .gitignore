@@ -1,0 +1,3 @@
+# What the tests and the scripts leave beside themselves
+__pycache__/
+*.pyc

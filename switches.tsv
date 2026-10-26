@@ -1,0 +1,52 @@
+name	kind	read at	for	purpose
+--all	option	port/gates/reports/spectator-log.py	test	spectator-log.py: every displayed frame of the spectator's log is printed, not only the frames around a change of choice.
+--altered	option	port/gates/gate-judge.py	test	Gate judge (desync): the step before which the difference was made in game 2 (default 1500); the relay must find it within 60 frames of that step.
+--builds	option	port/gates/gate-judge.py	test	Gate judge (mixed): how many different builds the games of a mixed race must have run between them (default 2; 1: a race of one build, as a base line).
+--control	option	port/gates/gate-judge.py	test	Gate judge (playbacks): the row is the control, whose one playback must FAIL (a recording altered on purpose).
+--copies	option	port/gates/gate-judge.py	test	Gate judge (playbacks): RUN ..., the playbacks that must have left a pacing log with screen copies, one size a destination.
+--detail	option	port/gates/reports/map-report.py	test	map-report.py: also the functions inside every host place, the kinds of generated body and each guest place's host places.
+--end	option	port/gates/gate-judge.py	test	Gate judge (game): how the game must have ended: results, desync, stop or any (the default).
+--exe-map	option	port/gates/reports/map-report.py	test	map-report.py: FILE, the runner's link map (it belongs to one runner build; default <work>/scratch/map/tools/moderngekko-run.map).
+--expect	option	port/gates/gate-judge.py	test	gate-judge.py playbacks: how many playbacks the row's log must hold.
+--expect-test	option	port/gates/reports/freeze-report.py	test	freeze-report.py: judges the run of freeze-run.sh (two freezes, the close from outside, the summary's words); its last line is PASS or FAIL.
+--from	option	port/gates/reports/map-pace.py	test	map-pace.py and map-report.py: the scene's first race frame (default 600).
+--functions	option	port/gates/reports/map-report.py	test	map-report.py: FILE, the module's generated.h: the guest functions' starts when no module map is given.
+--gaps	option	port/gates/reports/map-pace.py	test	map-pace.py: how many picture gaps over 20 ms are listed (default 12).
+--harness	option	port/gates/runs/launch-file.py	test	launch-file.py: SCENE, the launch file of a harness scene of the manifest (its start and its settings), in place of a named file of port/configs.
+--launchers	option	port/gates/gate-judge.py	test	Gate judge (quickplay): how many launchers the run started (default 2).
+--limit	option	port/gates/gate-judge.py	test	Gate judge (playback): the seconds the playback was given (replay-check.sh's MAXS); one that has no summary line is then "did not finish".
+--log	option	port/gates/gate-judge.py	test	Gate judge: FILE, the output of the scripts that made the run (a row's log of gates.sh).
+--manifest	option	port/gates/runs/launch-file.py	test	launch-file.py: FILE, the manifest --harness reads its scene from (default recomp/manifest.toml).
+--map	option	port/gates/reports/freeze-report.py	test	freeze-report.py: PROGRAM=FILE, a linker's map: the call stacks' places are printed with the function each is in.
+--mode	option	port/gates/reports/map-pace.py	test	map-pace.py and map-report.py: the game's mode whose fields are the scene (default 2, a race).
+--module-map	option	port/gates/reports/map-report.py	test	map-report.py: FILE, the module's link map (a relink with /MAP); without it generated code is not split by function or kind of body.
+--must	option	port/gates/gate-judge.py	test	Gate judge (game): the files the run's script always writes (probe, pace); the absence of one is then a failure, not a check that was not made.
+--only	option	port/gates/reports/stat-pack-report.py	test	Stat packs' report: one part of the proving run alone is judged (plain, plain2, old, pack, two, server, real, refused), as stat-pack-run.sh ONLY=PART ran it.
+--others	option	port/gates/reports/map-report.py	test	map-report.py: also every other thread's samples by function.
+--playbacks	option	port/gates/gate-judge.py	test	Gate judge (pair): how many playbacks' result lines the row's log must hold (default 0: none looked for).
+--race-before	option	port/gates/reports/run-summary.py	test	run-summary.py: FIELD, the time per field is taken over the race's fields before this field only (a run that asks for a picture at FIELD measures the game's pace up to there).
+--races	option	port/gates/gate-judge.py	test	Gate judge (quickplay): how many races each launcher ran (default 2).
+--same-length	option	port/gates/replay-compare.py	test	replay-compare.py: recordings of unequal lengths fail too. Only its own test passes it: the gates leave the lengths to gate-judge.py.
+--set	option	port/gates/runs/launch-file.py	test	launch-file.py: KEY=JSON, one more key of the launch file by its dotted name (debug.lateSteps=2); replay-check.sh passes its SET= so.
+--short	option	port/gates/gate-judge.py	test	Gate judge (pair): the game (1 or 2) whose own seat the host's rule ended the race for: the logs must name one end step, and that seat must have no finish and not be out in both recordings.
+--symbols	option	port/gates/reports/map-report.py	test	map-report.py: FILE, the bundle's symbols.json: the image's routines by name.
+--tags	option	port/gates/reports/map-report.py	test	map-report.py: FILE, the executable's functions tagged by the hardware they touch (drawing is told from sound by it).
+--to	option	port/gates/reports/map-pace.py	test	map-pace.py and map-report.py: the scene's last race frame (default: the run's last).
+--top	option	port/gates/reports/map-report.py	test	map-report.py: rows per table (default 40).
+--undo-check	option	port/gates/gate-judge.py	test	Gate judge (playbacks): RUN ..., the playbacks that must have played with debug.undoLog "both" and logged the undo log's guard on and the same log as every page compared at every step.
+--video	option	port/gates/reports/map-report.py	test	map-report.py: also the video thread's tables.
+--window	option	port/gates/reports/map-report.py	test	map-report.py: S0,S1: the scene is the fields that end between S0 and S1 seconds after the run's first field, whatever the mode.
+DOLRECOMP_CLOSED_DEBUG	environment	port/gates/vendor/harness/recomp.py	build	Prints every closed call edge found while the closed set is computed.
+DOLRECOMP_CLOSED_ROOTS	environment	port/gates/vendor/harness/manifest.py	build	Addresses, or all: the listed functions and what they reach get a second, closed body.
+DOLRECOMP_INDIRECT_CALL_EXITS	environment	port/gates/vendor/harness/manifest.py	build	Hex call sites that keep leaving generated code, for instrumentation that watches dispatches.
+DOLRECOMP_LLVM_CACHE	environment	port/gates/vendor/harness/actions.py	build	The recompiler's LLVM cache folder, or off: the harness's build command sets it (recomp-kit's; the gates never build).
+DOLRECOMP_LLVM_DUMP_IR	environment	port/gates/vendor/harness/actions.py	build	The recompiler writes its LLVM IR: the harness's emit command sets it (recomp-kit's; the gates never build).
+DOLRECOMP_LLVM_ONLY	environment	port/gates/vendor/harness/actions.py	build	Addresses: emits only the chunks that hold them, for inspecting generated code; not a linkable module.
+DOLRECOMP_PSQ_GQR	environment	port/gates/vendor/harness/manifest.py	build	index:hex value pairs: the value the title keeps in a GQR; quantized loads and stores are emitted for it.
+PORT_WORK	environment	port/gates/gate-judge.py	agent	The port's work folder (default: the folder port/setup/work-folder.env names; port/setup/setup.sh makes one): every script of port/build, port/gates and port/setup works in it.
+RECOMP_AGENT	environment	port/gates/tests/test_replay_check.py	test	the harness reads it: the name a run takes the PC under (its request file's name; two runs at once need two names). replay-check.sh sets it, one for each playback of a set; here a stand-in harness of its tests reads it.
+RECOMP_KIT	environment	port/gates/reports/run-summary.py	agent	A recomp-kit checkout whose tools/harness is used in place of this repository's copy, port/gates/vendor/harness (the default; port/setup/lib.sh HARNESS_DIR): the harness starts every test game, and run-summary.py uses its comparison of two runs.
+RECOMP_MACHINE	environment	port/gates/tests/test_gates_inputs.py	test	the harness reads it: the machine file of the run (which runner, which folders). The gate scripts set it; here a stand-in harness of the gates' tests reads it.
+RECOMP_MANIFEST	environment	port/gates/vendor/harness/recomp.py	test	The harness reads it: the game's manifest (recomp/manifest.toml, or replay-check.sh's with its ad hoc scene). The gate scripts set it.
+RECOMP_TIMING_AGENT	environment	port/gates/vendor/harness/locks.py	agent	The harness reads it: 1 in the shell of the one agent whose timing batch may start over a request that has waited too long.
+SDL_*	environment	port/gates/runs/launcher-run.sh	test	SDL's own variables, read by the SDL library inside the emulator, never by our code. Every script that starts a test game sets SDL_JOYSTICK_HIDAPI_GAMECUBE=0, or the game takes the owner's GameCube controller adapter; RUN_ENV hands others on.
