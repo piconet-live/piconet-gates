@@ -199,8 +199,10 @@ class Parts(unittest.TestCase):
         self.assertEqual(result, "FAIL")
         self.assertIn("44 differed (first at step 1614)", said)
         self.assertEqual(gj.playback(SUMMARY.format(0, 100, 0), 100, 178)[0], "FAIL")   # nothing compared
-        # the race's results against the recording's (the runner's CheckResults): a difference fails, none compared passes
+        # the race's results against the recording's (the runner's CheckResults): a difference fails, none compared passes,
+        # and so does one in a recording from before version 7, whose results the runner does not judge
         for said, verdict in (("DIFFER from the recording's", "FAIL"), ("the recording's", "PASS"),
+                              ("other, not judged (a recording from before 0.4.0)", "PASS"),
                               ("not in the recording", "PASS"), ("not reached", "PASS")):
             result, line = gj.playback(SUMMARY.format(100, 100, 0) + f"fzgx: playback: results {said}\n", 100, 178)
             self.assertEqual(result, verdict, said)

@@ -11,7 +11,7 @@ from judge_game import NO_IDLES, crash_lines, frozen, probe_fields, screen_copie
 
 SUMMARY = re.compile(r"playback: (\d+) of (\d+) steps compared with the recording, (\d+) differed; "
                      r"rollbacks (\d+) \((\d+) forced\), deepest (\d+)")
-RESULTS = re.compile(r"fzgx: playback: results (DIFFER from the recording's|not reached|not in the recording|the recording's)")
+RESULTS = re.compile(r"fzgx: playback: results (DIFFER from the recording's|other, not judged|not reached|not in the recording|the recording's)")
 RESULT = re.compile(r"^(\S+): (.*): (PASS|FAIL|DID NOT FINISH)$", re.M)
 # the runner's line when it starts no game from its launch file (port/core/src/files_launch.cpp ReadLaunchFile, said
 # as "fzgx: ..." by the runner's start): the file refused, unreadable or too long
