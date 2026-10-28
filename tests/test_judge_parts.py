@@ -159,6 +159,29 @@ class Parts(unittest.TestCase):
         v = self.recordings(("game 1", self.rec(50), True), ("game 2", self.rec(50, sums=sums), True))
         self.assertIn("differ first at step 30", v.bad[0])
 
+    def test_replay_compare_reads_a_compact_file_with_a_whole_one(self):
+        rf = compare.replay_file
+
+        def file(steps, sums=None, compact=True):   # a recording with a lineup (the game's), made compact
+            data = recording(steps, sums=sums)
+            at = data.index(b"FZRF") + 12
+            data = data[:at] + b"FZRL" + struct.pack(">I", 124) + bytes(124) + data[at:]
+            return rf.compact(data) if compact else data
+
+        whole, small = self.write("w.fzrp", file(130, compact=False)), self.write("c.fzrp", file(130))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(compare.main(["--same-length", whole, small]), 0)
+        self.assertIn("130 steps, compact, course 1", out.getvalue())
+        self.assertIn("130 steps in both; inputs equal; checksums equal at every step", out.getvalue())
+        for step, change, first in ((70, 1, 70), (120, 0x01010101, 120), (70, 0x01010101, None)):
+            sums = list(range(130))
+            sums[step] ^= change    # (the last: a change the folded byte cannot see, at a step that keeps only the byte)
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(compare.main([whole, self.write("d.fzrp", file(130, sums=sums))]), 0 if first is None else 1)
+            self.assertIn("checksums equal at every step" if first is None else f"differ first at step {first}", out.getvalue())
+
     def test_replay_compare_shows_the_lengths_and_can_require_them(self):
         a, b = self.write("a.fzrp", recording(80)), self.write("b.fzrp", recording(27, results=False))
         out = io.StringIO()
@@ -176,6 +199,14 @@ class Parts(unittest.TestCase):
         self.assertEqual(result, "FAIL")
         self.assertIn("44 differed (first at step 1614)", said)
         self.assertEqual(gj.playback(SUMMARY.format(0, 100, 0), 100, 178)[0], "FAIL")   # nothing compared
+        # the race's results against the recording's (the runner's CheckResults): a difference fails, none compared passes,
+        # and so does one in a recording from before version 7, whose results the runner does not judge
+        for said, verdict in (("DIFFER from the recording's", "FAIL"), ("the recording's", "PASS"),
+                              ("other, not judged (a recording from before 0.4.0)", "PASS"),
+                              ("not in the recording", "PASS"), ("not reached", "PASS")):
+            result, line = gj.playback(SUMMARY.format(100, 100, 0) + f"fzgx: playback: results {said}\n", 100, 178)
+            self.assertEqual(result, verdict, said)
+            self.assertEqual("results DIFFER" in line, verdict == "FAIL")
         self.assertEqual(gj.playback(CRASH + SUMMARY.format(10, 10, 0), 10, 178)[0], "FAIL")
 
     def test_a_playback_cut_short_is_its_own_result(self):

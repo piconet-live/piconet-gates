@@ -11,6 +11,7 @@ from judge_game import NO_IDLES, crash_lines, frozen, probe_fields, screen_copie
 
 SUMMARY = re.compile(r"playback: (\d+) of (\d+) steps compared with the recording, (\d+) differed; "
                      r"rollbacks (\d+) \((\d+) forced\), deepest (\d+)")
+RESULTS = re.compile(r"fzgx: playback: results (DIFFER from the recording's|other, not judged|not reached|not in the recording|the recording's)")
 RESULT = re.compile(r"^(\S+): (.*): (PASS|FAIL|DID NOT FINISH)$", re.M)
 # the runner's line when it starts no game from its launch file (port/core/src/files_launch.cpp ReadLaunchFile, said
 # as "fzgx: ..." by the runner's start): the file refused, unreadable or too long
@@ -34,10 +35,16 @@ def playback(text, steps, limit, fields=()):
     for m in SUMMARY.finditer(text):
         pass
     first = re.search(r"differs from the recording first at step (\d+)", text)
+    # the race's results against the recording's, where the recording took them (the runner's playback.cpp
+    # CheckResults): a difference fails like a step that differs; a recording without results, or a playback cut
+    # before its race's end, compares none
+    results = RESULTS.search(text)
     if m:
-        ok = m.group(1) != "0" and m.group(3) == "0"
+        differ = bool(results) and results.group(1).startswith("DIFFER")
+        ok = m.group(1) != "0" and m.group(3) == "0" and not differ
         return ("PASS" if ok else "FAIL",
                 f"{m.group(1)} of {m.group(2)} steps compared, {m.group(3)} differed"
+                f"{'; results DIFFER from the recording' if differ else ''}"
                 f"{f' (first at step {first.group(1)})' if first else ''}; rollbacks {m.group(4)} ({m.group(5)} forced), "
                 f"deepest {m.group(6)}")
     reached = [int(x) for x in re.findall(r"fzgx: step (\d+)", text)]
