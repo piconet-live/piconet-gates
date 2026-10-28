@@ -10,7 +10,11 @@ Exit status 0 when every pair is equal over its common steps: a recording cut sh
 way, so a gate that must know both games ran the whole race gives --same-length, with which unequal lengths fail
 too (or reads the lengths and asks each game's log why: gate-judge.py). Reads files only; prints no header (a header
 holds no token, but nothing of it is needed here). The file is read by the generated reader (protocol/replay.toml,
-protocol/generated/replay_file.py)."""
+protocol/generated/replay_file.py). A compact file (version 8) keeps a step's whole checksum only at every 60th step
+and the last, and the folded byte (its four bytes XORed) at every step: where either file of a pair has only the
+byte, the bytes are compared (the reader's Checksum), so a compact file compares with a whole one or another compact
+one at every step. A difference the byte cannot see (1 in 256) shows a step or a few later: a game that differed stays
+different, and the next whole checksum is never more than 60 steps on."""
 import json
 import os
 import sys
@@ -24,14 +28,17 @@ import replay_file  # noqa: E402
 def read(path):
     r = replay_file.read(path)
     if not r.marked or not replay_file.played(r.version):
-        sys.exit(f"{path}: not a version {', '.join(map(str, replay_file.VERSIONS))} replay")
+        sys.exit(f"{path}: not a version {', '.join(map(str, replay_file.VERSIONS + (replay_file.COMPACT_VERSION,)))} replay")
+    if r.error:
+        sys.exit(f"{path}: a compact replay that does not read: {r.error}")
     if r.header is None:
         sys.exit(f"{path}: ends inside its header")
     header = json.loads(r.header)
     if not r.frames_marked:
         sys.exit(f"{path}: no frames")
     return dict(path=path, header=header, seats=r.seats, seat=r.seat, steps=r.steps,
-                results=json.loads(r.results) if r.results is not None else None, whole=r.whole, lineup=r.lineup_part)
+                results=json.loads(r.results) if r.results is not None else None, whole=r.whole, lineup=r.lineup_part,
+                compact=r.compact)
 
 
 def main(argv):
@@ -40,7 +47,8 @@ def main(argv):
     for f in files:
         setup = f["header"].get("match", {}).get("setup", {})
         print(f"{'/'.join(f['path'].split('/')[-2:])}: seen from seat {f['seat']}, "
-              f"{len(f['seats'])} player seats, {len(f['steps'])} steps{'' if f['whole'] else ' (cut inside a step)'}, "
+              f"{len(f['seats'])} player seats, {len(f['steps'])} steps{'' if f['whole'] else ' (cut inside a step)'}"
+              f"{', compact' if f['compact'] else ''}, "
               f"course {setup.get('course')}, {setup.get('laps')} lap(s), engine {f['header'].get('engine', '-')}, "
               f"results {'yes' if f['results'] else 'no'}")
     ok = True
