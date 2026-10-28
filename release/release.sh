@@ -52,7 +52,7 @@ STEPS='build|The game build (runner build.sh)
 package|Player copy, made for the stack
 installer|Installer folder
 previous|Previous release, for deltas
-pack|Velopack pack
+pack|Velopack pack (Setup and the portable zip)
 upload|Upload to GitHub (RELEASE=1 only)'
 
 NAME=""; FROM=""; LIST=""
@@ -144,7 +144,7 @@ step_installer() {   # the checked copy, laid out as the installed folder: app/*
   cp -a "$copy/$folder/." "$PACK/"
   for part in recomp source; do [ ! -e "$PACK/$part" ] || { echo "release: the launcher's folder has a $part of its own" >&2; return 1; }; cp -a "$copy/$part" "$PACK/$part"; done
   rm "$PACK/$marker"
-  printf 'This file marks the folder as an installed launcher: it keeps its data in your own folder (%%LOCALAPPDATA%%\\fzgx-launcher),\r\nas every update replaces this folder. Leave the file here.\r\n' > "$PACK/$installed"
+  printf 'This file marks the folder as an installed launcher: it keeps its data in your own folder (%%LOCALAPPDATA%%\\fzgx-launcher),\r\nas every update replaces this folder. From the portable zip (a .portable file beside this folder) the data is in "data" there.\r\nLeave the file here.\r\n' > "$PACK/$installed"
   [ -z "$(find "$PACK" -type l | head -1)" ] || { echo "release: a link in $PACK" >&2; return 1; }
   echo "installer folder: $PACK (version $(version), $(find "$PACK" -type f | wc -l) files)"
 }
@@ -160,7 +160,7 @@ step_pack() {
   vpk "[win]" pack --packId "$PACK_ID" --packVersion "$(version)" --packDir "$PACK" --mainExe "$MAIN_EXE" \
     --packTitle "Piconet Launcher" --packAuthors "Piconet" --icon "$launcher/net/src/Launcher.App/Assets/Icon/app.ico" \
     --splashImage "$gates/release/splash.png" \
-    --channel "$CHANNEL" --aumid "$PACK_ID" --noPortable --outputDir "$FEED" "${sign[@]}"
+    --channel "$CHANNEL" --aumid "$PACK_ID" --outputDir "$FEED" "${sign[@]}"
   ls -la "$FEED"
 }
 step_upload() {   # a published release, not a draft and NOT a pre-release: the launcher reads the "latest release"

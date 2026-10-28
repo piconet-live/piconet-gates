@@ -28,13 +28,22 @@ moved.
 | `package` | the runner's `port/build/package.sh` with `STACK`, `STACK_ADDRESS` (`stacks.py address STACK` in the service) and `KIND=public` | the player copy, checked, in `W/release/NAME/copy/dist` |
 | `installer` | the copy laid out as the installed folder: the launcher's folder (`app/`) at the top, `recomp/` and `source/` beside it, the copy's marker (`portable-copy.txt`) replaced by `installed-copy.txt` (both named in the launcher's `Install.cs`) | `W/release/NAME/installer` |
 | `previous` | `vpk "[win]" download github`: the newest release's full package, for the delta | `W/release/NAME/releases` |
-| `pack` | `vpk "[win]" pack`: pack id `Piconet.Launcher`, the copy's version, main program `Launcher.App.exe`, the app's icon, the splash shown while Setup installs (`release/splash.png`, the BETA badge), channel `beta`, no portable zip; signed only with `SIGN=azure` | `releases/`: the Setup program (expected `Piconet.Launcher-beta-Setup.exe`), the full and delta packages, `releases.beta.json` |
+| `pack` | `vpk "[win]" pack`: pack id `Piconet.Launcher`, the copy's version, main program `Launcher.App.exe`, the app's icon, the splash shown while Setup installs (`release/splash.png`, the BETA badge), channel `beta`, and the portable zip; signed only with `SIGN=azure` | `releases/`: the Setup program (expected `Piconet.Launcher-beta-Setup.exe`), the portable zip (`Piconet.Launcher-beta-Portable.zip`), the full and delta packages, `releases.beta.json`, `assets.beta.json` (what upload sends) |
 | `upload` | `vpk "[win]" upload github --publish`, the token from `~/.config/fzgx/github-token`: **only with `RELEASE=1`**; otherwise it prints the command | a release `vVERSION` on piconet-live/piconet-launcher, at the launcher's commit |
 
 Each step's log is `W/release/NAME/logs/NN-step.log`; `steps.tsv` has each step's status, seconds and time.
 `--from STEP` goes on at a step when every step before it ended well in this run. The monorepo's progress file and
 its stop handling (`scripts/progress.sh`, `end_started.py`) did not come over in the split: a run that is stopped
 with Ctrl+C ends the step in front, and a step that started games or builds may leave them to end by themselves.
+
+**The portable zip** (since 0.5.2) is Velopack's: the installed folder as Setup lays it out (`Update.exe`, a
+`Piconet Launcher.exe` that starts the launcher, the package's files in `current/`), with Velopack's `.portable` at its
+top. Unzipped anywhere, it updates itself from the same feed as an installed launcher, and keeps its data in `data/`
+beside `current/` (the launcher's `Install.cs`: `installed-copy.txt` in the libraries' folder and `.portable` above it),
+since every update replaces `current/` whole. Checked with a trial pack of v051's installer folder (2026-10-28): the zip
+holds `.portable`, the stub, `Update.exe` and `current/installed-copy.txt`, and `assets.beta.json` lists it as
+"Portable", which upload sends with Setup. A launcher before 0.5.2 in that zip would keep its data in the player's own
+folder: never pack the zip from an older launcher.
 
 The installer differs from the player copy by the one marker file, and by the top-level program and read-me it
 leaves out: everything package.py refuses in a copy (game data, a person's name, a link, a launcher not made for the
