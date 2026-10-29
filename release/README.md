@@ -28,6 +28,7 @@ moved.
 | `package` | the runner's `port/build/package.sh` with `STACK`, `STACK_ADDRESS` (`stacks.py address STACK` in the service) and `KIND=public` | the player copy, checked, in `W/release/NAME/copy/dist` |
 | `installer` | the copy laid out as the installed folder: the launcher's folder (`app/`) at the top, `recomp/` and `source/` beside it, the copy's marker (`portable-copy.txt`) replaced by `installed-copy.txt` (both named in the launcher's `Install.cs`) | `W/release/NAME/installer` |
 | `previous` | `vpk "[win]" download github`: the newest release's full package, for the delta | `W/release/NAME/releases` |
+| `notes` | this version's section of `PATCH-NOTES.md` in the docs (`DOCS`, else `../piconet-docs` beside the runner): the section under `## Version VERSION · build ... (date)`, its heading left out. Refused when there is none or it is empty: the "Next build (not released)" heading takes the build's name when it is handed out, before this step | `W/release/NAME/notes.md`, printed in the step's log |
 | `pack` | `vpk "[win]" pack`: pack id `Piconet.Launcher`, the copy's version, main program `Launcher.App.exe`, the app's icon, the splash shown while Setup installs (`release/splash.png`, the BETA badge), channel `beta`, and the portable zip; signed only with `SIGN=azure` | `releases/`: the Setup program (expected `Piconet.Launcher-beta-Setup.exe`), the portable zip (`Piconet.Launcher-beta-Portable.zip`), the full and delta packages, `releases.beta.json`, `assets.beta.json` (what upload sends) |
 | `upload` | `vpk "[win]" upload github --publish`, the token from `~/.config/fzgx/github-token`: **only with `RELEASE=1`**; otherwise it prints the command | a release `vVERSION` on piconet-live/piconet-launcher, at the launcher's commit |
 
@@ -58,6 +59,9 @@ API: no rate limit, no token in the launcher. Velopack's GitHub source asks the 
 hour from one address without a token (one LAN party would use that up), and a token cannot ship in a public
 program. What follows from it:
 
+- **The release's text is its patch notes** (`notes`, then `vpk pack --releaseNotes`): upload puts them on the GitHub
+  release, which is public, and the launcher's update can show them. So a released section of `PATCH-NOTES.md` is
+  written for players: plain lines, no person named.
 - **Never upload a release as a pre-release or a draft** (`--pre`, or without `--publish`): "latest" is the newest
   release that is neither, so players would not see it. The beta is a channel, not a pre-release.
 - **The feed of the newest release is the only one read.** A player one version behind gets the delta; a player
