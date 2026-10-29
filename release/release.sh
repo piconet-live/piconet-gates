@@ -29,7 +29,7 @@
 set -uo pipefail
 gates=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 REPO_URL=https://github.com/piconet-live/piconet-launcher
-TOKEN_FILE=$HOME/.config/fzgx/github-token
+TOKEN_FILE=${TOKEN_FILE:-$HOME/.config/fzgx/github-token-classic}   # the classic token: the fine-grained one (github-token) is refused (403) by upload
 PACK_ID=Piconet.Launcher                 # the install folder %LOCALAPPDATA%\Piconet.Launcher; Branding.AppId, the taskbar's id
 MAIN_EXE=Launcher.App.exe                # the launcher's own host file, at the installed folder's top
 CHANNEL=${CHANNEL:-beta}
@@ -52,6 +52,7 @@ STEPS='build|The game build (runner build.sh)
 package|Player copy, made for the stack
 installer|Installer folder
 previous|Previous release, for deltas
+notes|Release notes from PATCH-NOTES.md
 pack|Velopack pack (Setup and the portable zip)
 upload|Upload to GitHub (RELEASE=1 only)'
 
@@ -69,6 +70,8 @@ W=${PORT_WORK:-$PORT_WORK_DEFAULT}
 pin() { awk -F'\t' -v n="$1" '$1 == n { print $2; f = 1 } END { exit !f }' "$root/port/setup/pins.tsv"; }
 service=$(cd "$root/$(pin REPO_SERVICE)" 2> /dev/null && pwd) || { echo "release: no service checkout at the runner's REPO_SERVICE ($(pin REPO_SERVICE))" >&2; exit 1; }
 launcher=$(cd "$root/$(pin REPO_LAUNCHER)" 2> /dev/null && pwd) || { echo "release: no launcher checkout at the runner's REPO_LAUNCHER ($(pin REPO_LAUNCHER))" >&2; exit 1; }
+# the docs (piconet-docs, private), whose PATCH-NOTES.md gives the release its notes: DOCS, else beside the runner
+docs=$(cd "${DOCS:-$root/../piconet-docs}" 2> /dev/null && pwd) || { echo "release: no docs checkout at ${DOCS:-$root/../piconet-docs} (DOCS names it)" >&2; exit 1; }
 
 [[ $NAME =~ ^[A-Za-z0-9]+$ ]] || { echo "release: NAME is letters and digits" >&2; exit 2; }
 [ -z "$FROM" ] || [[ " ${IDS[*]} " == *" $FROM "* ]] || { echo "release: no step $FROM (the steps: ${IDS[*]})" >&2; exit 2; }
@@ -154,12 +157,34 @@ step_previous() {   # the newest release's full package, so that vpk pack makes 
   if [ -n "${FIRST_RELEASE:-}" ]; then echo "previous: FIRST_RELEASE=1: no earlier release, no delta"; return 0; fi
   vpk "[win]" download github --repoUrl "$REPO_URL" --channel "$CHANNEL" --outputDir "$FEED" "${token[@]}"
 }
+step_notes() {   # this version's section of PATCH-NOTES.md, its heading left out: the GitHub release's text (public)
+  local v; v=$(version)
+  rm -f "$OUT/notes.md"
+  python3 - "$docs/PATCH-NOTES.md" "$v" "$OUT/notes.md" <<'PY' || return 1
+import re, sys
+path, version, out = sys.argv[1:]
+lines = open(path, encoding="utf-8").read().split("\n")
+head = re.compile(r"^## Version " + re.escape(version) + r"( |$)")
+start = next((i for i, l in enumerate(lines) if head.match(l)), None)
+if start is None:
+    sys.exit(f"release: {path} has no section \"## Version {version} · build ... (date)\": when the build is handed out, "
+             "its \"Next build (not released)\" heading takes its name (the file's own rule), and the docs are committed")
+end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+body = "\n".join(lines[start + 1:end]).strip()
+if not body:
+    sys.exit(f"release: the section of {version} in {path} is empty")
+open(out, "w", encoding="utf-8").write(body + "\n")
+print(f"notes: {len(body.splitlines())} lines from {lines[start][3:]}")
+PY
+  [ -z "$(git -C "$docs" status --porcelain -- PATCH-NOTES.md)" ] || echo "notes: PATCH-NOTES.md has changes that are not committed: the notes are taken as the file is"
+  cat "$OUT/notes.md"
+}
 step_pack() {
   local sign=(); [ "${SIGN:-}" != azure ] || sign=(--signTemplate "$SIGN_TEMPLATE")
   [ "${SIGN:-}" = azure ] || echo "pack: unsigned (SIGN=azure signs; release/README.md, \"Signing\")"
   vpk "[win]" pack --packId "$PACK_ID" --packVersion "$(version)" --packDir "$PACK" --mainExe "$MAIN_EXE" \
     --packTitle "Piconet Launcher" --packAuthors "Piconet" --icon "$launcher/net/src/Launcher.App/Assets/Icon/app.ico" \
-    --splashImage "$gates/release/splash.png" \
+    --splashImage "$gates/release/splash.png" --releaseNotes "$OUT/notes.md" \
     --channel "$CHANNEL" --aumid "$PACK_ID" --outputDir "$FEED" "${sign[@]}"
   ls -la "$FEED"
 }
