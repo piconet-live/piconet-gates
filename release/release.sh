@@ -16,6 +16,8 @@
 #                      with the company). Without it nothing is signed, and Windows' SmartScreen warns at Setup
 #   RELEASE=1          really upload to GitHub. Without it the step "upload" only prints what it would run. Never set
 #                      it in an agent's run: the owner publishes
+#   SITE=DIR           the site's checkout (piconet-site), else ../piconet-site beside the runner: the step site writes
+#                      the version's notes page and the download link there, and commits nothing
 #   --from STEP        go on at a step (its id, as --list prints them) after a run that stopped
 #   --list             the steps and nothing else
 # It refuses to start when the trees are not what it builds: the runner's or the launcher's checkout with changes
@@ -54,7 +56,8 @@ installer|Installer folder
 previous|Previous release, for deltas
 notes|Release notes from PATCH-NOTES.md
 pack|Velopack pack (Setup and the portable zip)
-upload|Upload to GitHub (RELEASE=1 only)'
+upload|Upload to GitHub (RELEASE=1 only)
+site|Site notes page and download link'
 
 NAME=""; FROM=""; LIST=""
 while [ $# -gt 0 ]; do case "$1" in
@@ -72,6 +75,8 @@ service=$(cd "$root/$(pin REPO_SERVICE)" 2> /dev/null && pwd) || { echo "release
 launcher=$(cd "$root/$(pin REPO_LAUNCHER)" 2> /dev/null && pwd) || { echo "release: no launcher checkout at the runner's REPO_LAUNCHER ($(pin REPO_LAUNCHER))" >&2; exit 1; }
 # the docs (piconet-docs, private), whose PATCH-NOTES.md gives the release its notes: DOCS, else beside the runner
 docs=$(cd "${DOCS:-$root/../piconet-docs}" 2> /dev/null && pwd) || { echo "release: no docs checkout at ${DOCS:-$root/../piconet-docs} (DOCS names it)" >&2; exit 1; }
+# the site (piconet-site, private), whose notes page and download link the step site writes: SITE, else beside the runner
+site=$(cd "${SITE:-$root/../piconet-site}" 2> /dev/null && pwd) || site=""
 
 [[ $NAME =~ ^[A-Za-z0-9]+$ ]] || { echo "release: NAME is letters and digits" >&2; exit 2; }
 [ -z "$FROM" ] || [[ " ${IDS[*]} " == *" $FROM "* ]] || { echo "release: no step $FROM (the steps: ${IDS[*]})" >&2; exit 2; }
@@ -200,6 +205,18 @@ step_upload() {   # a published release, not a draft and NOT a pre-release: the 
   fi
   [ -f "$TOKEN_FILE" ] || { echo "release: no token at $TOKEN_FILE" >&2; return 1; }
   "${plan[@]}" --token "$(cat "$TOKEN_FILE")"
+}
+
+step_site() {   # piconet.live: the version's notes page and the download link to its Setup, written, not committed
+  [ "$KIND" = public ] || { echo "site: KIND=$KIND: a test build has no notes page or download"; return 0; }
+  [ -n "$site" ] || { echo "release: no site checkout at ${SITE:-$root/../piconet-site} (SITE names it)" >&2; return 1; }
+  [ -z "$(git -C "$site" status --porcelain)" ] || { echo "release: $site has changes that are not committed" >&2; return 1; }
+  local setup=$FEED/$PACK_ID-$CHANNEL-Setup.exe
+  [ -f "$setup" ] || { echo "release: no $setup (the step pack makes it)" >&2; return 1; }
+  python3 "$gates/release/site.py" "$docs/PATCH-NOTES.md" "$(version)" "$setup" "$REPO_URL" "$site"
+  git -C "$site" status --short
+  echo "site: read the page's summary and highlights (the notes' first bullets) and edit them if need be, then commit,"
+  echo "site: merge and deploy the site once the release is uploaded: the download link names the GitHub release"
 }
 
 # ---- the run
