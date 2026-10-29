@@ -29,7 +29,7 @@
 set -uo pipefail
 gates=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 REPO_URL=https://github.com/piconet-live/piconet-launcher
-TOKEN_FILE=$HOME/.config/fzgx/github-token
+TOKEN_FILE=${TOKEN_FILE:-$HOME/.config/fzgx/github-token-classic}   # the classic token: the fine-grained one (github-token) is refused (403) by upload
 PACK_ID=Piconet.Launcher                 # the install folder %LOCALAPPDATA%\Piconet.Launcher; Branding.AppId, the taskbar's id
 MAIN_EXE=Launcher.App.exe                # the launcher's own host file, at the installed folder's top
 CHANNEL=${CHANNEL:-beta}
