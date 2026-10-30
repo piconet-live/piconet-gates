@@ -76,6 +76,13 @@ MF=${MACHINE:-$W/port/machine-n.toml}; lacks=""
 [ -f "$G/sys/main.dol" ] || lacks+="; the game folder $G (GAME=; port/build/build.sh NAME makes port/game-NAME from your own disc, which port/setup/setup.sh WORK DISC unpacks$([ -f "$DISC_DEFAULT" ] || printf '; %s' "$(disc_lacks "$DISC_DEFAULT")"))"
 for f in "$@"; do [ -f "$f" ] || [ -f "$(wslpath -u "$f" 2> /dev/null)" ] || lacks+="; the recording $f"; done
 [ -z "$lacks" ] || { echo "replay-check $name: not run: needs ${lacks#; } (work folder $W)" >&2; exit 2; }
+# the module's build recorded the bundle it was made from: another bundle's sites jump into nothing (a guest crash)
+inputs=$W/work/cg-${BUILD:-n6}.inputs.json
+if [ -f "$inputs" ]; then
+  said=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['inputs'].get('bundle',{}).get('mod.bin',''))" "$inputs")
+  held=$(sha1sum "$B/mod.bin" | cut -d' ' -f1)
+  [ -z "$said" ] || [ "$said" = "$held" ] || { echo "replay-check $name: not run: module ${BUILD:-n6} was built from image ${said:0:8}, and $B holds ${held:0:8}: give BUNDLE= its own" >&2; exit 2; }
+fi
 BW="$WW\\$(printf %s "${B#"$W"/}" | tr / '\\')"
 # the harness takes the game folder from its machine file: the port's, with the folder asked for
 machine=$(mktemp --suffix=.toml); outs=$(mktemp -d); trap 'rm -f "$manifest" "$machine" "$machine".pb*; rm -rf "$outs"' EXIT

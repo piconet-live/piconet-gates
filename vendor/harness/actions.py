@@ -241,6 +241,12 @@ def run(ctx: Context, spec: RunSpec) -> list[Step]:
         os.makedirs(R)
         if mc["user_pristine"]:
             shutil.copytree(mc.p(mc["user_pristine"]), mc.p(mc["user"]), dirs_exist_ok=True)
+        # a test game never raises a panic dialog: a run's user folder without a config has the emulator's default, on
+        config = mc.p(mc["config"]) if mc["config"] else None
+        if config and not os.path.exists(config):
+            os.makedirs(os.path.dirname(config), exist_ok=True)
+            with open(config, "w", encoding="utf-8") as f:
+                f.write("[Interface]\nUsePanicHandlers = False\n")
         if (spec.build or spec.module_path) and not os.path.exists(
                 mc.p(spec.module_path or mc.module_file(spec.build, m.game_id))):
             raise HarnessError(f"no module for build '{spec.build}': build it first")
