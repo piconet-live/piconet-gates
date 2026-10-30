@@ -33,6 +33,9 @@
 #   STATS1, STATS2  a stat pack for game 1's and game 2's race: a file with the match start's "setup.stats" (name,
 #                   fingerprint, values; stat-pack.py writes one). Both the same file: a race on that pack. Two
 #                   files: two games that were handed different packs (stat-pack-run.sh). None: the disc's car data
+#   GAME_MODE       a game mode for both games' race: a file with the match start's "setup.mode" (package, hash,
+#                   api, params: the protocol's ModeStart, as protocol/tests/vectors/modes/*.mode.json). The mode's
+#                   setup words win (its laps are the race's). A SPECTATE3 spectator is given it as well
 #   PLAYER_MACHINE  both games' own machine (0 to 40; default the stand-ins' own): a pack's changed machine in the
 #                   race (MACHINE is the playbacks': the harness's machine file, replay-check.sh)
 #   ROLLBACKS       rollbacks forced in both games: the game's "debug.forceRollback" as JSON,
@@ -117,7 +120,7 @@ timeout 120 dotnet "$APP_BOTS" --server ws://127.0.0.1:47810/ws --count 2 --name
     --offset 1 --expect $((n + 2)) --start-voters 2 $fill --clock-rate "$rate" ${PLAYER_MACHINE:+--machine "$PLAYER_MACHINE"} \
     > "$B/$R.standin.log" 2>&1 || true
 [ -s "$B/$R.h0" ] && [ -s "$B/$R.h1" ] || { echo "pair-run: no match started (see $B/$R.server.log, $B/$R.standin.log)" >&2; exit 1; }
-python3 - "$B/$R" "$host" "${DELAY:-2}" "${OC:-6.0}" "${LAG:-0}" "${LAG2:-${LAG:-0}}" "${MACHINE1:-}" "${MACHINE2:-}" "${STATS1:-}" "${STATS2:-}" "${CUSTOM:-}" "${PACKS:-}" "${SEAT_PACKS:-}" "${SETTING1:-}" "${SETTING2:-}" <<'PY'
+python3 - "$B/$R" "$host" "${DELAY:-2}" "${OC:-6.0}" "${LAG:-0}" "${LAG2:-${LAG:-0}}" "${MACHINE1:-}" "${MACHINE2:-}" "${STATS1:-}" "${STATS2:-}" "${CUSTOM:-}" "${PACKS:-}" "${SEAT_PACKS:-}" "${SETTING1:-}" "${SETTING2:-}" "${GAME_MODE:-}" <<'PY'
 import json, sys
 base, host, delay, oc, lag1, lag2 = sys.argv[1:7]
 stats1, stats2 = sys.argv[9:11]
@@ -144,6 +147,8 @@ for i, lag, stats in ((0, lag1, stats1), (1, lag2, stats2)):
     match = matches[i]
     if stats:   # the race's stat pack, as a server would put it into the match start
         match["setup"]["stats"] = json.load(open(stats))
+    if sys.argv[16]:   # the race's game mode, as a server would put it into the match start
+        match["setup"]["mode"] = json.load(open(sys.argv[16]))
     json.dump({"match": match, "relayHost": host, "delay": int(delay), "overclock": float(oc), "otherSounds": "quieter"},
               open(f"{base}-{i + 1}.json", "w"))
     s = match["setup"]
@@ -152,7 +157,8 @@ for i, lag, stats in ((0, lag1, stats1), (1, lag2, stats2)):
           f"seeds {s['shuffleSeed']:#x} {s['cpuSeed']:#x}, test lag {lag} ms, machine "
           f"{next(x for x in s['seats'] if x['seat'] == match['seat'])['machine']}, setting "
           f"{next(x for x in s['seats'] if x['seat'] == match['seat']).get('setting', 'as dealt')}"
-          + (f", stat pack {s['stats']['name']} ({s['stats']['fingerprint'][:8]})" if stats else ""))
+          + (f", stat pack {s['stats']['name']} ({s['stats']['fingerprint'][:8]})" if stats else "")
+          + (f", game mode {s['mode']['hash'][:8]} (params {s['mode']['params']})" if sys.argv[16] else ""))
     open(f"{base}.seat{i + 1}", "w").write(str(match["seat"]))
 PY
 ko=""
@@ -242,9 +248,12 @@ if [ -n "${SPECTATE3:-}" ]; then
     timeout 60 dotnet "$APP_BOTS" --server ws://127.0.0.1:47810/ws --count 1 --name-prefix Watch --watch --handoff "$B/$R.w{0}" \
         --offset 40 --expect 1 --clock-rate "$rate" > "$B/$R.watcher.log" 2>&1 || true
     [ -s "$B/$R.w0" ] || { echo "spectator: no spectator's start (see $B/$R.watcher.log)"; exit 1; }
+    # (the race's game mode too: the test server does not hand it out, games 1 and 2 got it from GAME_MODE above)
     python3 -c 'import json, sys
-m = json.load(open(sys.argv[1])); m["spectate"] = True; m["match"] = json.load(open(sys.argv[2])); json.dump(m, open(sys.argv[3], "w"))' \
-        "$B/$R-1.json" "$B/$R.w0" "$B/$R-3.json"
+m = json.load(open(sys.argv[1])); m["spectate"] = True; m["match"] = json.load(open(sys.argv[2]))
+if sys.argv[4]: m["match"]["setup"]["mode"] = json.load(open(sys.argv[4]))
+json.dump(m, open(sys.argv[3], "w"))' \
+        "$B/$R-1.json" "$B/$R.w0" "$B/$R-3.json" "${GAME_MODE:-}"
     game3="\"rollbackLog\":\"$(printf '%s' "$WW\\port\\runs\\$R-3\\rb.csv" | sed 's/\\/\\\\/g')\""
     [ -z "${DEBUG3:-}" ] || game3="$game3,$DEBUG3"
     # (a knock-out by the task poke is the race's: the spectator's game makes it too, or it watches another race)
