@@ -19,6 +19,7 @@
 #   SERVER_ARGS     more arguments for the test server (e.g. "--start-timeout 600 --ready-timeout 600")
 #   ON_DESYNC       what the test server's relay does about a game its checksum vote went against (the server's
 #                   --on-desync: observe or disconnect). Default: not passed (the server's default, observe)
+#   VISIT1, VISIT2..  more members of launcher N's "quickPlay" ('"custom":{"create":"X"},"afterLeave":"watch"')
 #   DOOR1, DOOR2..  more members of the "debug" object of launcher 1's, 2's, .. launch file ('"startLimitSeconds":60');
 #                   ARGS1, ARGS2..: more arguments of the runner's own for its games; GAME1, GAME2..: more members of
 #                   its games' "debug" part ('"alterStep":1500': the launch file's "game", handed on to the game); SETTINGS1, SETTINGS2..: more members of its settings.json (a launcher
@@ -144,6 +145,7 @@ start() {   # start I KIND: launcher I through its test door; KIND race or watch
   js() { printf '"%s"' "$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g')"; }
   local name="Quick-Play-test-$R-game-$i" more_debug=""
   local visit="\"server\":$(js "$URL"),\"log\":$(js "$RUNW\\door.jsonl"),\"timeLimitSeconds\":$((MIN * 60 - 30))"
+  local visit_more="VISIT$i"; visit="$visit${!visit_more:+,${!visit_more}}"   # more of the visit: "custom", "afterLeave"
   local ra="$(js --mute),$(js --automation-dir),$(js "$RUNW\\auto")"
   # every game's own test settings of the emulator's side (its launch file's "debug", not the environment): the
   # automation folder allowed, the probe, the pacing log, the pad script, a window that does not take the focus
