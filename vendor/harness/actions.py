@@ -325,7 +325,9 @@ def _do_run(ctx: Context, spec: RunSpec, launch: list[str], label: str, fields: 
     entry = registry.record(mc["work"], int(pid), mc["runner_process"], label, spec.run, R, locks.owner())
     if ctx.lock is not None:
         ctx.lock.extend(fields * mc["run_seconds_per_field"] + 300)
-    if not spec.headless:
+    # RECOMP_NO_SHOW=1: a window left as the game showed it (show.ps1 raises it and takes the keyboard from whoever is
+    # at the PC): for a run beside someone's work, with the launch file's debug.windowNoActivate
+    if not spec.headless and not os.environ.get("RECOMP_NO_SHOW"):
         with open(R + ".show.log", "w") as out:
             subprocess.Popen(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
                               mc.w(KIT_WIN, "show.ps1"), "-Id", pid, "-Label", label, "-Title", mc["window_title"]],
