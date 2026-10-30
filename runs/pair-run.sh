@@ -35,7 +35,7 @@
 #                   files: two games that were handed different packs (stat-pack-run.sh). None: the disc's car data
 #   GAME_MODE       a game mode for both games' race: a file with the match start's "setup.mode" (package, hash,
 #                   api, params: the protocol's ModeStart, as protocol/tests/vectors/modes/*.mode.json). The mode's
-#                   setup words win (its laps are the race's)
+#                   setup words win (its laps are the race's). A SPECTATE3 spectator is given it as well
 #   PLAYER_MACHINE  both games' own machine (0 to 40; default the stand-ins' own): a pack's changed machine in the
 #                   race (MACHINE is the playbacks': the harness's machine file, replay-check.sh)
 #   ROLLBACKS       rollbacks forced in both games: the game's "debug.forceRollback" as JSON,
@@ -248,9 +248,12 @@ if [ -n "${SPECTATE3:-}" ]; then
     timeout 60 dotnet "$APP_BOTS" --server ws://127.0.0.1:47810/ws --count 1 --name-prefix Watch --watch --handoff "$B/$R.w{0}" \
         --offset 40 --expect 1 --clock-rate "$rate" > "$B/$R.watcher.log" 2>&1 || true
     [ -s "$B/$R.w0" ] || { echo "spectator: no spectator's start (see $B/$R.watcher.log)"; exit 1; }
+    # (the race's game mode too: the test server does not hand it out, games 1 and 2 got it from GAME_MODE above)
     python3 -c 'import json, sys
-m = json.load(open(sys.argv[1])); m["spectate"] = True; m["match"] = json.load(open(sys.argv[2])); json.dump(m, open(sys.argv[3], "w"))' \
-        "$B/$R-1.json" "$B/$R.w0" "$B/$R-3.json"
+m = json.load(open(sys.argv[1])); m["spectate"] = True; m["match"] = json.load(open(sys.argv[2]))
+if sys.argv[4]: m["match"]["setup"]["mode"] = json.load(open(sys.argv[4]))
+json.dump(m, open(sys.argv[3], "w"))' \
+        "$B/$R-1.json" "$B/$R.w0" "$B/$R-3.json" "${GAME_MODE:-}"
     game3="\"rollbackLog\":\"$(printf '%s' "$WW\\port\\runs\\$R-3\\rb.csv" | sed 's/\\/\\\\/g')\""
     [ -z "${DEBUG3:-}" ] || game3="$game3,$DEBUG3"
     # (a knock-out by the task poke is the race's: the spectator's game makes it too, or it watches another race)
