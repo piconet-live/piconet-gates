@@ -114,9 +114,9 @@ race_server 300 --no-announce --allow-ai-inputs --start-timeout $([ -z "${ONE:-}
     $([ "${EARLY_CLOSE:-1}" != 0 ] || echo --no-early-close) \
     ${FINISH_LIMIT:+--finish-limit-seconds "$FINISH_LIMIT"} || exit 1
 n=${BOTCOUNT:-$([ -z "${SPECTATE3:-}" ] && echo 28 || echo 27)}; fill=""; [ "$n" -ge 28 ] || fill="--cpu-voters 30"
-race_bots "$B/$R.bots.log" 290 --server ws://127.0.0.1:47810/ws --count "$n" --name-prefix Bot --offset 3 --expect $((n + 2)) \
+race_bots "$B/$R.bots.log" 290 --server ws://127.0.0.1:$TEST_PORT/ws --count "$n" --name-prefix Bot --offset 3 --expect $((n + 2)) \
     --start-voters "$n" $fill --no-checksums ${BOTS:---ai} --frames 14000 --timeout 280 --clock-rate "$rate"
-timeout 120 dotnet "$APP_BOTS" --server ws://127.0.0.1:47810/ws --count 2 --name-prefix Port --handoff "$B/$R.h{0}" \
+timeout 120 dotnet "$APP_BOTS" --server ws://127.0.0.1:$TEST_PORT/ws --count 2 --name-prefix Port --handoff "$B/$R.h{0}" \
     --offset 1 --expect $((n + 2)) --start-voters 2 $fill --clock-rate "$rate" ${PLAYER_MACHINE:+--machine "$PLAYER_MACHINE"} \
     > "$B/$R.standin.log" 2>&1 || true
 [ -s "$B/$R.h0" ] && [ -s "$B/$R.h1" ] || { echo "pair-run: no match started (see $B/$R.server.log, $B/$R.standin.log)" >&2; exit 1; }
@@ -245,7 +245,7 @@ if [ -n "${SPECTATE3:-}" ]; then
     sleep "$SPECTATE3"
     rm -f "$B/$R.w0"
     echo "spectator: $SPECTATE3 s after the go a bot asks to watch at $(date +%T.%N | cut -c1-12)"
-    timeout 60 dotnet "$APP_BOTS" --server ws://127.0.0.1:47810/ws --count 1 --name-prefix Watch --watch --handoff "$B/$R.w{0}" \
+    timeout 60 dotnet "$APP_BOTS" --server ws://127.0.0.1:$TEST_PORT/ws --count 1 --name-prefix Watch --watch --handoff "$B/$R.w{0}" \
         --offset 40 --expect 1 --clock-rate "$rate" > "$B/$R.watcher.log" 2>&1 || true
     [ -s "$B/$R.w0" ] || { echo "spectator: no spectator's start (see $B/$R.watcher.log)"; exit 1; }
     # (the race's game mode too: the test server does not hand it out, games 1 and 2 got it from GAME_MODE above)

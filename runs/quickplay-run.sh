@@ -112,7 +112,7 @@ if [ -z "${SERVER:-}" ]; then
   course=""; [ -z "${FIXED:-}" ] || course="--course ${COURSE:-16}"
   race_server $((MIN * 60 + 60)) --no-announce --allow-debug --voting-minimum 2 --laps "${LAPS:-1}" --clock-rate "$rate" \
       $course ${ON_DESYNC:+--on-desync "$ON_DESYNC"} ${SERVER_ARGS:-} || exit 1
-  URL="ws://$host:47810/ws"
+  URL="ws://$host:$TEST_PORT/ws"
 else
   URL=$SERVER
 fi
