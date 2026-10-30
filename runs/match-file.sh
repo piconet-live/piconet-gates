@@ -28,7 +28,8 @@ if [ -s "$pidfile" ] && grep -qs "Online.Server" "/proc/$(cat "$pidfile")/cmdlin
 setsid timeout "${SERVER_SECONDS:-420}" dotnet "$server" --no-announce --allow-ai-inputs --start-timeout 240 --voting-minimum 1 \
     --course "${COURSE:-16}" --laps "${LAPS:-1}" --clock-rate "$rate" > "$out.server.log" 2>&1 < /dev/null &
 echo $! > "$pidfile"
-"$(dirname "$0")/server-up.sh" 127.0.0.1 "$out.server.log" || exit 1
+# (not up: server-up.sh stops the server it was given, this one, by its ID)
+"$(dirname "$0")/server-up.sh" 127.0.0.1 "$out.server.log" "$(cat "$pidfile")" || { rm -f "$pidfile"; exit 1; }
 timeout 120 dotnet "$bots" --server ws://127.0.0.1:47810/ws --count 1 --name-prefix "${PLAYER:-Port}" --handoff "$out.handoff" \
     --offset 1 --expect 1 --start-voters 1 --cpu-voters 1 --clock-rate "$rate" \
     ${MACHINE:+--machine $MACHINE} ${STOCK:+--stock-color $STOCK} > "$out.bot.log" 2>&1 || true

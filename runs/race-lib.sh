@@ -4,7 +4,7 @@
 # never by a text in a command line of someone else's.
 #   race_server SECONDS ARG...   the test server (APP_SERVER, built by APP_BUILD) with these arguments, detached and
 #                                ended by itself after SECONDS; its log $B/$R.server.log, its ID $B/server.pid. Then
-#                                waits until it is up (server-up.sh): status 1 when it never was
+#                                waits until it is up (server-up.sh): status 1 when it never was, the server stopped
 #   race_bots LOG SECONDS ARG... the simulated players (APP_BOTS) the same way: their log LOG, their ID $B/bots.pid
 #   stop_ours                    the server and the simulated players this run started, by the IDs it wrote
 #   game_of LAUNCHER             the process ID of the game that launcher (a Windows process ID) started: its one
@@ -15,7 +15,7 @@ race_server() {
   local seconds=$1; shift
   setsid timeout "$seconds" dotnet "$APP_SERVER" "$@" > "$B/$R.server.log" 2>&1 < /dev/null &
   echo $! > "$B/server.pid"
-  "$_race_runs/server-up.sh" 127.0.0.1 "$B/$R.server.log"
+  "$_race_runs/server-up.sh" 127.0.0.1 "$B/$R.server.log" "$(cat "$B/server.pid")"
 }
 race_bots() {
   local log=$1 seconds=$2; shift 2
