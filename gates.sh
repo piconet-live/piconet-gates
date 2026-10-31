@@ -446,7 +446,7 @@ elif want mixed && { head_row mixed $((${MIXED_THIRTY:+3 +} 6)); inputs mixed "$
   judge mixed mixed "$T-mixa" "$T-mixb" ${MIXED_THIRTY:+"$T-mix30"} --log "$OUT/mixed.log"; settle mixed $s "$JF"
 fi
 want failures && manual failures "four runs (5.15 item 2) whose result is a message in the door's lines, read by hand: quickplay-run.sh with a dead SERVER, SETTINGS2, DOOR1='\"startLimitSeconds\":60', CLOSE1_AFTER=20"
-want service && manual service "it starts a relay on the real service: only when the brief says so. SERVER=wss://piconet-coordinator.fly.dev/ws BOTCOUNT=4 RACES=1 MINUTES=12 port/gates/runs/quickplay-run.sh RUN"
+want service && manual service "it starts a relay on the test service: only when the brief says so. SERVER=wss://piconet-test-coordinator.fly.dev/ws BOTCOUNT=4 RACES=1 MINUTES=12 port/gates/runs/quickplay-run.sh RUN"
 want movie && manual movie "no script reads the movie's fields (run pcn2 was read by hand): CARD_FROM=user-story-pristine port/gates/runs/launcher-run.sh RUN story-mission1"
 want timing && manual timing "the module against the JIT, on a quiet PC and by the limits of the speed handbook: MACHINE=$GM port/gates/time-native.sh TAG $M (it refuses when the PC is not quiet)"
 

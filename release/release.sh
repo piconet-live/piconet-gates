@@ -3,10 +3,11 @@
 # feed on GitHub (release/README.md). NAME is the build's name, letters and digits (v050): the runner's build keeps
 # every part under it in the work folder (bundle-NAME, game-NAME, runner-NAME, mod-cg-NAME), and <work>/release/NAME
 # holds every step's log, the record of the run, the player copy, the installer's folder and Velopack's releases.
-#   STACK=A|B          the server stack the release is for: its address is read from the service's
-#                      deploy/fly/stacks.py (a checkout beside the runner's, the runner's pins.tsv REPO_SERVICE) and
-#                      built into the launcher as its official server. Named, never assumed
 #   KIND=public        the players' build (default); KIND=test makes a test build (its launcher says TEST BUILD)
+#   STACK=live|test    the server stack the release is for, which goes with KIND: live for public (default), test for
+#                      test (default); any other pair is refused. Its address is read from the service's
+#                      deploy/fly/stacks.py (a checkout beside the runner's, the runner's pins.tsv REPO_SERVICE) and
+#                      built into the launcher as its official server
 #   CHANNEL=beta       Velopack's channel (default beta, the owner's for 0.5.0): the feed is releases.CHANNEL.json
 #   PROFILE, VCRT, PORT_PYTHON, PORT_AGENT   as the runner's port/build/build.sh and package.sh take them (PORT_PYTHON:
 #                      a Windows python.exe with keystone, for the image: the build is the runner's CMake superbuild)
@@ -36,6 +37,7 @@ PACK_ID=Piconet.Launcher                 # the install folder %LOCALAPPDATA%\Pic
 MAIN_EXE=Launcher.App.exe                # the launcher's own host file, at the installed folder's top
 CHANNEL=${CHANNEL:-beta}
 KIND=${KIND:-public}
+[ "$KIND" = test ] && STACK=${STACK:-test} || STACK=${STACK:-live}
 
 # ---- signing: OFF unless SIGN=azure, and refused until these are filled in (release/README.md, "Signing") --------
 # Azure Artifact Signing (formerly Trusted Signing), through the .NET Foundation's `sign` tool, which runs on Linux:
@@ -81,8 +83,8 @@ site=$(cd "${SITE:-$root/../piconet-site}" 2> /dev/null && pwd) || site=""
 [[ $NAME =~ ^[A-Za-z0-9]+$ ]] || { echo "release: NAME is letters and digits" >&2; exit 2; }
 [ -z "$FROM" ] || [[ " ${IDS[*]} " == *" $FROM "* ]] || { echo "release: no step $FROM (the steps: ${IDS[*]})" >&2; exit 2; }
 refuse() { echo "release: REFUSED: $1" >&2; exit 1; }
-: "${STACK:?release: name the server stack the release is for, STACK=A or STACK=B (deploy/fly/OPERATIONS.md in piconet-service)}"
 [[ $KIND =~ ^(test|public)$ ]] || refuse "KIND is test or public"
+case "$KIND/$STACK" in public/live|test/test) ;; *) refuse "KIND=$KIND with STACK=$STACK: the players' build is for the live stack, a test build for the test stack (deploy/fly/OPERATIONS.md in piconet-service)";; esac
 [[ $CHANNEL =~ ^[a-z0-9-]+$ ]] || refuse "CHANNEL is lower-case letters, digits and '-'"
 case "${SIGN:-}" in ""|azure) ;; *) refuse "SIGN is azure or unset (unsigned)";; esac
 [ "${RELEASE:-}" != 1 ] || [ "$KIND" = public ] || refuse "RELEASE=1 with KIND=$KIND: the feed is the players' own; a test build is never uploaded to it"
@@ -133,7 +135,7 @@ said() { sed -n "s/.*const string $1 = \"\([^\"]*\)\".*/\1/p" "$launcher/net/src
 version() { python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$PACK/source/package-manifest.json"; }
 
 # the build stages its development copy (launcher-NAME) with no stack: the stack is applied once, at the step package.
-# STACK is in this script's environment (STACK=A release.sh) and stage-launcher.sh takes STACK, STACK_ADDRESS and
+# STACK is in this script's environment (STACK=live release.sh) and stage-launcher.sh takes STACK, STACK_ADDRESS and
 # KIND all three or none, so the build gets none of them
 step_build() { env -u STACK -u STACK_ADDRESS -u KIND port/build/build.sh "$NAME"; }
 step_package() {
