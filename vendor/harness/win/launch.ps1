@@ -15,7 +15,10 @@ New-Item -ItemType Directory -Force -Path "$RunDir\auto" | Out-Null
 Remove-Item -Force -ErrorAction SilentlyContinue "$RunDir\limit.txt", "$RunDir\time-limit.txt", "$RunDir\time-limit-pid.txt"
 foreach ($kv in ($Env -split ';')) { if ($kv) { $k, $v = $kv -split '=', 2; [Environment]::SetEnvironmentVariable($k, $v.Replace('{run}', $RunDir)) } }
 $list = @(); foreach ($a in ($ArgList -split '\|')) { if ($a) { $list += $a } }
-$p = Start-Process -FilePath $Runner -ArgumentList $list -WorkingDirectory $RunDir -RedirectStandardOutput "$RunDir\stdout.txt" -RedirectStandardError "$RunDir\stderr.txt" -PassThru -WindowStyle Minimized
+# RECOMP_NO_SHOW=1: started hidden and not minimised: a minimised start still activates the program (its console, or its
+# window), which takes the keyboard from whoever is at the PC. Whoever wants the window shows it with SW_SHOWNOACTIVATE.
+$style = if ($env:RECOMP_NO_SHOW) { "Hidden" } else { "Minimized" }
+$p = Start-Process -FilePath $Runner -ArgumentList $list -WorkingDirectory $RunDir -RedirectStandardOutput "$RunDir\stdout.txt" -RedirectStandardError "$RunDir\stderr.txt" -PassThru -WindowStyle $style
 $p.Id | Out-File -Encoding ascii "$RunDir\pid.txt"
 # The watchdog is started without redirection (no handle of this shell is inherited, so it holds no caller waiting)
 # and hidden; it is told the runner's start time, which tells the runner from a later process given the same ID.

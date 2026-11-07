@@ -130,10 +130,10 @@ race_server 300 --no-announce --allow-ai-inputs --start-timeout 240 --voting-min
     $([ "${EARLY_CLOSE:-1}" != 0 ] || echo --no-early-close) ${RULES:-} || exit 1
 fill=""; [ "$((n + N))" -ge 30 ] || fill="--cpu-voters 30"
 if [ "$n" -gt 0 ]; then
-  race_bots "$B/$R.bots.log" 290 --server ws://127.0.0.1:47810/ws --count "$n" --name-prefix Bot --offset $((N + 1)) --expect $((n + N)) \
+  race_bots "$B/$R.bots.log" 290 --server ws://127.0.0.1:$TEST_PORT/ws --count "$n" --name-prefix Bot --offset $((N + 1)) --expect $((n + N)) \
       --start-voters "$n" $fill --no-checksums --ai --frames 14000 --timeout 280 --clock-rate "$rate"
 fi
-timeout 120 dotnet "$APP_BOTS" --server ws://127.0.0.1:47810/ws --count "$N" --name-prefix Port --handoff "$B/$R.h{0}" \
+timeout 120 dotnet "$APP_BOTS" --server ws://127.0.0.1:$TEST_PORT/ws --count "$N" --name-prefix Port --handoff "$B/$R.h{0}" \
     --offset 1 --expect $((n + N)) --start-voters "$N" $fill --clock-rate "$rate" > "$B/$R.standin.log" 2>&1 || true
 for i in $(seq 0 $((N - 1))); do
   [ -s "$B/$R.h$i" ] || { echo "mixed-run: no match started (see $B/$R.server.log, $B/$R.standin.log)" >&2; exit 1; }

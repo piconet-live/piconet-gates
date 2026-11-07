@@ -10,10 +10,11 @@ release is uploaded.
 ## One command
 
 ```
-STACK=A release/release.sh v050 --list          # the steps; nothing is started
-STACK=A release/release.sh v050                 # the build, the copy, the installer, the feed: nothing uploaded
-STACK=A release/release.sh v050 --from pack     # after a stop: go on at that step
-STACK=A RELEASE=1 release/release.sh v050 --from upload    # the owner's word: publish it
+release/release.sh v050 --list          # the steps; nothing is started
+release/release.sh v050                 # the build, the copy, the installer, the feed: nothing uploaded
+release/release.sh v050 --from pack     # after a stop: go on at that step
+RELEASE=1 release/release.sh v050 --from upload    # the owner's word: publish it
+KIND=test release/release.sh v050t      # a test build, for the test stack; never uploaded
 ```
 
 Run it from these gates checked out where the runner's `port/setup/pins.tsv` says (`REPO_GATES`, `port/gates`), with

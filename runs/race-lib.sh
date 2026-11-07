@@ -13,7 +13,7 @@
 _race_runs=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 race_server() {
   local seconds=$1; shift
-  setsid timeout "$seconds" dotnet "$APP_SERVER" "$@" > "$B/$R.server.log" 2>&1 < /dev/null &
+  setsid timeout "$seconds" dotnet "$APP_SERVER" $TEST_PORTS "$@" > "$B/$R.server.log" 2>&1 < /dev/null &
   echo $! > "$B/server.pid"
   "$_race_runs/server-up.sh" 127.0.0.1 "$B/$R.server.log" "$(cat "$B/server.pid")"
 }
