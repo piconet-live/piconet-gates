@@ -65,7 +65,7 @@
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd); repo=$(cd "$here/../../.." && pwd)
 . "$here/../../setup/lib.sh"; W=${PORT_WORK:-$PORT_WORK_DEFAULT}; WW=${PORT_WORK_WIN:-$(wslpath -w "$W")}
-BOUND=170   # the run's seconds, as the header says
+BOUND=${RUN_BOUND:-170}   # the run's seconds, as the header says (RUN_BOUND: a race whose mode fixes a longer length)
 R=$1; SCENE=${2:-boot-menus}; RUN=$W/port/runs/$R; RUNW="$WW\\port\\runs\\$R"
 L=${LAUNCHER:-launcher-dev}; DN=${DATA_NAME:-$L-data}; DATA=$W/port/$DN; DATAW="$WW\\port\\$DN"
 if [ -n "${HAVE_LOCK:-}" ]; then :   # the caller holds TIMING.lock already (it had to start a test server after taking it)
